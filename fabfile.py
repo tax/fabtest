@@ -39,8 +39,7 @@ def install_repo():
 
 @runs_once
 def install_os_packages():
-    for package in env.packages:
-        sudo('apt-get install -y %s' % package)
+    sudo('apt-get install -y %s' % ' '.join(env.packages))
 
 
 @runs_once
