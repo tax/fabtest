@@ -4,20 +4,31 @@ from fabric.contrib.files import exists
 env.user = 'root'
 env.path_app = '/var/www/test/'
 env.path_virtualenv = env.path_app + 'env/'
-env.git_repo = 'git@bitbucket.org:micromediait/galadriel.git'
+env.git_repo = 'git@github.com:tax/fabtest.git'
 
 
 @task
 def deploy(full=True):
     execute(install_repo)
-    execute(create_virtualenv)
-    execute(install_os_packages)
-    execute(install_python_packages)
+    if full:
+        execute(install_os_packages)
+        execute(create_virtualenv)
+        execute(install_python_packages)
 
 
 @task
 def deploy_fast():
     deploy(full=False)
+
+
+@runs_once
+def install_repo():
+    run('mkdir -p {0}'.format(env.path_app))
+    with cd(env.app_path):
+        if not exists('%s/.git' % env.path_app):
+            run('git clone %s' % env.git_repo)
+        else:
+            run('git pull origin')
 
 
 @runs_once
@@ -30,7 +41,8 @@ def install_os_packages():
 @runs_once
 def install_python_packages():
     """Install pip requirements in the virtualenv."""
-    run('%s/bin/pip install -U -r requirements.txt' % env.path_virtualenv)
+    with cd(env.app_path):
+        run('%s/bin/pip install -U -r requirements.txt' % env.path_virtualenv)
 
 
 def stop_supervisor():
@@ -39,15 +51,6 @@ def stop_supervisor():
 
 def start_supervisor():
     pass
-
-
-def install_app():
-    run('mkdir -p {0}'.format(env.path_app))
-    with cd(env.app_path):
-        if not exists('%s/.git' % env.path_app):
-            run('git clone %s' % env.git_repo)
-        else:
-            run('git pull origin')
 
 
 @runs_once
