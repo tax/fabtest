@@ -31,6 +31,8 @@ def deploy(full=True):
         execute(install_python_packages)
         execute(configure_nginx)
     execute(configure_package)
+    run('%s/uwsgi --ini %s/config/uwsgi.ini' % (env.path_virtualenv, env.path_repo))
+
     execute(start_supervisor)
     sudo('service nginx reload')
 
