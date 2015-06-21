@@ -30,8 +30,9 @@ def deploy(full=True):
         execute(install_nodejs_packages)
         execute(install_python_packages)
         execute(configure_nginx)
+        execute(configure_supervisor)
     execute(configure_package)
-    run('%s/bin/uwsgi --ini %s/config/uwsgi.ini' % (env.path_virtualenv, env.path_repo))
+    #run('%s/bin/uwsgi --ini %s/config/uwsgi.ini' % (env.path_virtualenv, env.path_repo))
 
     execute(start_supervisor)
     sudo('service nginx reload')
@@ -106,6 +107,11 @@ def configure_nginx():
     # Enable site in nginx
     cmd = 'ln -sf /etc/nginx/sites-available/%s /etc/nginx/sites-enabled/%s'
     sudo(cmd % (env.site_url, env.site_url))
+
+
+def configure_supervisor():
+    cmd = 'cp -u %s/config/supervisor.conf /etc/supervisor/conf.d/%s.conf'
+    sudo(cmd % (env.path_repo, env.app_name))
 
 
 def configure_uwsgi():
