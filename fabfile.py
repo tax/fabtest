@@ -22,7 +22,7 @@ def deploy(full=True):
     run('mkdir -p %s/media' % env.path_app)
     run('mkdir -p %s/static' % env.path_app)
     # Stop all running processes if supervisor is installed
-    sudo('supervisorctl2 stop all')
+    sudo('supervisorctl stop all')
     execute(install_repo)
     if full:
         execute(create_virtualenv)
