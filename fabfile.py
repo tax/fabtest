@@ -3,6 +3,7 @@ from fabric.contrib.files import exists
 
 env.user = 'root'
 env.app_name = 'fabtest'
+env.settings_module
 env.path_app = '/var/www/test'
 env.path_repo = '%s/fabtest' % env.path_app
 env.path_virtualenv = '%s/env' % env.path_app
@@ -56,8 +57,8 @@ def install_python_packages():
 @runs_once
 def configure_package(virtualenv):
     """Configure the package."""
-    manage('syncdb --noinput --settings=%s' % env.settings_module)
-    manage('migrate --noinput --settings=%s' % env.settings_module)
+    #manage('syncdb --noinput --settings=%s' % env.settings_module)
+    #manage('migrate --noinput --settings=%s' % env.settings_module)
     manage('collectstatic --noinput --settings=%s' % env.settings_module)
 
 
@@ -72,7 +73,8 @@ def create_virtualenv():
 
 def manage(virtualenv, cmd):
     """Run a manage.py command."""
-    run('%s/bin/manage.py %s' % (env.path_virtualenv, cmd))
+    with cd(env.path_repo):
+        run('%s/bin/python manage.py %s' % (env.path_virtualenv, cmd))
 
 
 def stop_supervisor():
