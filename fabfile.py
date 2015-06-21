@@ -7,12 +7,17 @@ env.path_app = '/var/www/test'
 env.path_repo = '%s/fabtest' % env.path_app
 env.path_virtualenv = '%s/env' % env.path_app
 env.git_repo = 'https://github.com/tax/fabtest.git'#'git@github.com:tax/fabtest.git'
-env.packages = ['redis-server', 'python-dev', 'python-pip']
+
+env.packages = ['redis-server', 'python-dev', 'python-pip', 'supervisor']
+env.path_supervisor = '/etc/supervisor/conf.d'
 
 
 @task
 def deploy(full=True):
     run('mkdir -p %s' % env.path_app)
+    run('mkdir -p %s/logs' % env.path_app)
+    run('mkdir -p %s/media' % env.path_app)
+    run('mkdir -p %s/static' % env.path_app)
     execute(stop_supervisor)
     execute(install_repo)
     if full:
@@ -75,4 +80,13 @@ def stop_supervisor():
 
 
 def start_supervisor():
+    pass
+
+
+def setup_nginx():
+    #ln -s /etc/nginx/sites-available/yourdomain.com /etc/nginx/sites-enabled/yourdomain.com
+    pass
+
+
+def setup_supervisor():
     pass
