@@ -3,13 +3,14 @@ from fabric.contrib.files import exists
 
 env.user = 'root'
 env.app_name = 'fabtest'
-env.settings_module
+env.site_url = 'fabtest.paul.tax'
+env.settings_module = 'fabtest.settings'
 env.path_app = '/var/www/test'
 env.path_repo = '%s/fabtest' % env.path_app
 env.path_virtualenv = '%s/env' % env.path_app
 env.git_repo = 'https://github.com/tax/fabtest.git'#'git@github.com:tax/fabtest.git'
 
-env.packages = ['redis-server', 'python-dev', 'python-pip', 'supervisor']
+env.packages = ['redis-server', 'python-dev', 'python-pip', 'supervisor', 'nginx']
 env.path_supervisor = '/etc/supervisor/conf.d'
 
 
@@ -24,8 +25,11 @@ def deploy(full=True):
     if full:
         execute(install_os_packages)
         execute(create_virtualenv)
+        execute(install_nodejs_packages)
         execute(install_python_packages)
+    execute(configure_package)
     execute(start_supervisor)
+    # sudo('service nginx reload')
 
 
 @task
@@ -41,6 +45,7 @@ def install_repo():
     else:
         with cd(env.path_repo):
             run('git pull origin')
+            run('git log -1 --format="current rev: %H"')
 
 
 @runs_once
@@ -54,11 +59,15 @@ def install_python_packages():
     run('%s/bin/pip install -U -r %s/requirements.txt' % (env.path_virtualenv, env.path_repo))
 
 
+def install_nodejs_packages():
+    pass
+
+
 @runs_once
-def configure_package(virtualenv):
+def configure_package():
     """Configure the package."""
-    #manage('syncdb --noinput --settings=%s' % env.settings_module)
-    #manage('migrate --noinput --settings=%s' % env.settings_module)
+    manage('syncdb --noinput --settings=%s' % env.settings_module)
+    manage('migrate --noinput --settings=%s' % env.settings_module)
     manage('collectstatic --noinput --settings=%s' % env.settings_module)
 
 
@@ -71,7 +80,7 @@ def create_virtualenv():
         print('virtualenv allready exists')
 
 
-def manage(virtualenv, cmd):
+def manage(cmd):
     """Run a manage.py command."""
     with cd(env.path_repo):
         run('%s/bin/python manage.py %s' % (env.path_virtualenv, cmd))
@@ -86,8 +95,12 @@ def start_supervisor():
 
 
 def setup_nginx():
-    #ln -s /etc/nginx/sites-available/yourdomain.com /etc/nginx/sites-enabled/yourdomain.com
-    pass
+    # Create site
+    cmd = 'cp -u %s/config/nginx.conf /etc/nginx/sites-available/%s'
+    sudo(cmd % (env.path_repo, env.site_url))
+    # Enable site in nginx
+    cmd = 'ln -s /etc/nginx/sites-available/%s /etc/nginx/sites-enabled/%s'
+    sudo(cmd % (env.site_url, env.site_url))
 
 
 def setup_supervisor():
