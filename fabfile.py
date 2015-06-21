@@ -22,7 +22,7 @@ def deploy(full=True):
     run('mkdir -p %s/media' % env.path_app)
     run('mkdir -p %s/static' % env.path_app)
     # Stop all running processes via supervisor
-    execute(stop_supervisor)
+    sudo('supervisorctl stop all')
     execute(install_repo)
     if full:
         execute(install_os_packages)
@@ -34,7 +34,7 @@ def deploy(full=True):
     execute(configure_package)
     #run('%s/bin/uwsgi --ini %s/config/uwsgi.ini' % (env.path_virtualenv, env.path_repo))
 
-    execute(start_supervisor)
+    sudo('supervisorctl reload')
     sudo('service nginx reload')
 
 
