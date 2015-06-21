@@ -27,6 +27,7 @@ def deploy(full=True):
         execute(create_virtualenv)
         execute(install_nodejs_packages)
         execute(install_python_packages)
+        execute(setup_nginx)
     execute(configure_package)
     execute(start_supervisor)
     # sudo('service nginx reload')
