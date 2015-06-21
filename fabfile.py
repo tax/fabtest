@@ -30,7 +30,7 @@ def deploy(full=True):
         execute(setup_nginx)
     execute(configure_package)
     execute(start_supervisor)
-    # sudo('service nginx reload')
+    sudo('service nginx reload')
 
 
 @task
@@ -100,7 +100,7 @@ def setup_nginx():
     cmd = 'cp -u %s/config/nginx.conf /etc/nginx/sites-available/%s'
     sudo(cmd % (env.path_repo, env.site_url))
     # Enable site in nginx
-    cmd = 'ln -s /etc/nginx/sites-available/%s /etc/nginx/sites-enabled/%s'
+    cmd = 'ln -sf /etc/nginx/sites-available/%s /etc/nginx/sites-enabled/%s'
     sudo(cmd % (env.site_url, env.site_url))
 
 
