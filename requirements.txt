@@ -5,3 +5,4 @@ paramiko==1.15.2
 pycrypto==2.6.1
 requests==2.7.0
 requests-aws==0.1.6
+uWSGI==2.0.10

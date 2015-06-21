@@ -8,7 +8,7 @@ env.settings_module = 'fabtest.settings'
 env.path_app = '/var/www/test'
 env.path_repo = '%s/fabtest' % env.path_app
 env.path_virtualenv = '%s/env' % env.path_app
-env.git_repo = 'https://github.com/tax/fabtest.git'#'git@github.com:tax/fabtest.git'
+env.git_repo = 'https://github.com/tax/fabtest.git'  # 'git@github.com:tax/fabtest.git'
 
 env.packages = ['redis-server', 'python-dev', 'python-pip', 'supervisor', 'nginx']
 env.path_supervisor = '/etc/supervisor/conf.d'
@@ -16,10 +16,12 @@ env.path_supervisor = '/etc/supervisor/conf.d'
 
 @task
 def deploy(full=True):
+    # Make all directories
     run('mkdir -p %s' % env.path_app)
     run('mkdir -p %s/logs' % env.path_app)
     run('mkdir -p %s/media' % env.path_app)
     run('mkdir -p %s/static' % env.path_app)
+    # Stop all running processes via supervisor
     execute(stop_supervisor)
     execute(install_repo)
     if full:
@@ -27,7 +29,7 @@ def deploy(full=True):
         execute(create_virtualenv)
         execute(install_nodejs_packages)
         execute(install_python_packages)
-        execute(setup_nginx)
+        execute(configure_nginx)
     execute(configure_package)
     execute(start_supervisor)
     sudo('service nginx reload')
@@ -95,7 +97,16 @@ def start_supervisor():
     pass
 
 
-def setup_nginx():
+def configure_nginx():
+    # Create site
+    cmd = 'cp -u %s/config/nginx.conf /etc/nginx/sites-available/%s'
+    sudo(cmd % (env.path_repo, env.site_url))
+    # Enable site in nginx
+    cmd = 'ln -sf /etc/nginx/sites-available/%s /etc/nginx/sites-enabled/%s'
+    sudo(cmd % (env.site_url, env.site_url))
+
+
+def configure_uwsgi():
     # Create site
     cmd = 'cp -u %s/config/nginx.conf /etc/nginx/sites-available/%s'
     sudo(cmd % (env.path_repo, env.site_url))
