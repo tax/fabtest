@@ -68,6 +68,9 @@ def install_python_packages():
 
 
 def install_nodejs_packages():
+    # Make node alias for nodejs
+    if not exists('/usr/bin/node'):
+        sudo('ln -s "$(which nodejs)" /usr/bin/node')
     with cd(env.path_repo):
         run('npm install')
 
@@ -81,6 +84,8 @@ def manage(cmd):
 @runs_once
 def configure_package():
     """Configure the package."""
+    # Build files with grunt
+    # run('grunt ')
     manage('syncdb --noinput --settings=%s' % env.settings_module)
     manage('migrate --noinput --settings=%s' % env.settings_module)
     manage('collectstatic --noinput --settings=%s' % env.settings_module)
