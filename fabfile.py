@@ -34,19 +34,25 @@ def deploy(full=True):
         execute(create_virtualenv)
         execute(install_nodejs_packages)
         execute(install_python_packages)
-        # execute(configure_nginx)
-        execute(configure_supervisor)
-
     supervisorctl('start %s:' % env.app_name)
-
-    # sudo('supervisorctl reload')
-    # sudo('service nginx reload')
 
 
 @task
 def deploy_short():
     """Shorter deploy without updating python dependencies and app configs"""
     deploy(full=False)
+
+
+@task
+def deploy_os():
+    """Deploy os dependencies and nginx and supervisord configs"""
+    execute(install)
+    # TODO make sure git repo is not owned by root
+    execute(install_repo)
+    execute(configure_nginx)
+    execute(configure_supervisor)
+    sudo('supervisorctl reload')
+    sudo('service nginx reload')
 
 
 @task
@@ -125,5 +131,6 @@ def configure_supervisor():
 
 
 def supervisorctl(command):
+    """Run supervisorctl command"""
     cmd = 'supervisorctl -u {user} -p {password} -s {server} {command}'
     run(cmd.format(command=command, **env.supervisorctl))
