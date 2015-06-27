@@ -10,6 +10,12 @@ env.path_repo = '%s/fabtest' % env.path_app
 env.path_virtualenv = '%s/env' % env.path_app
 env.git_repo = 'https://github.com/tax/fabtest.git'  # 'git@github.com:tax/fabtest.git'
 
+env.supervisorctl = {
+    'user': 'supervisor',
+    'password': 'mK3f7uV0eVeqsz95TteaRA60TAEAbx',
+    'server': 'http://localhost:9001'
+}
+
 env.packages = ['redis-server', 'python-dev', 'python-pip', 'supervisor', 'nginx', 'nodejs', 'npm']
 
 
@@ -22,19 +28,19 @@ def deploy(full=True):
     run('mkdir -p %s/media' % env.path_app)
     run('mkdir -p %s/static' % env.path_app)
     # Stop all running processes if supervisor is installed
-    sudo('supervisorctl stop all')
+    supervisorctl('stop %s:' % env.app_name)
     execute(install_repo)
     if full:
         execute(create_virtualenv)
         execute(install_nodejs_packages)
         execute(install_python_packages)
-        execute(configure_nginx)
+        # execute(configure_nginx)
         execute(configure_supervisor)
 
-    execute(configure_package)
+    supervisorctl('start %s:' % env.app_name)
 
-    sudo('supervisorctl reload')
-    sudo('service nginx reload')
+    # sudo('supervisorctl reload')
+    # sudo('service nginx reload')
 
 
 @task
@@ -75,10 +81,10 @@ def install_nodejs_packages():
         run('npm install')
 
 
-def manage(cmd):
+def manage(command):
     """Run a manage.py command."""
     with cd(env.path_repo):
-        run('%s/bin/python manage.py %s' % (env.path_virtualenv, cmd))
+        run('%s/bin/python manage.py %s' % (env.path_virtualenv, command))
 
 
 @runs_once
@@ -116,3 +122,8 @@ def configure_supervisor():
     """Copy supervisor config"""
     cmd = 'cp -u %s/config/supervisor.conf /etc/supervisor/conf.d/%s.conf'
     sudo(cmd % (env.path_repo, env.app_name))
+
+
+def supervisorctl(command):
+    cmd = 'supervisorctl -u {user} -p {password} -s {server} {command}'
+    run(cmd.format(command=command, **env.supervisorctl))
